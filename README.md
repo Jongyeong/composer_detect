@@ -31,5 +31,5 @@ if output is 1, it means that feaure is meaningful.
 <b> It is in progress, not completed </b> <br>
 there are some problems of optimaztion in layer more than 9.<br>
 Error rate<br>
-Two composer(Beethoven, Bach) : 23%(min) <br>
+Two composer(Beethoven, Bach) : 17.8%(min) <br>
 Three composer( above two and chopin) : 38% (min)
