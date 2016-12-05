@@ -19,7 +19,7 @@ Score -> divide into groups of 2 measures(motif candidate) -> use correlation to
 It is based on numpy <br>
 I use <br>
 softmax function and logistic (= 1 / (1+exp(-x)).<br>
-adaptive learning factor in range(0.4 ~ 0.01) - change based on cost function(crossentropy)<br>
+adaptive learning factor in range(0.01 ~ some value) - change based on cost function(crossentropy) in log2 scale<br>
 
 <b> Feature selection </b> <br>
 It is based on t-Test.<br>
