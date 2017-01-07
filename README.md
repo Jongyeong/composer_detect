@@ -3,7 +3,7 @@
 <b> I recommend to see poster or pptx.</b> <br>
 
 <b> Composer Detection based on Harmonic motif </b> <br>
-It is a code for my graduation thesis. And it is now in progress.
+It is a code for my graduation thesis.
 
 <b> Basic Concept </b><br>
 Score -> chord feature extract -> data (in json) : feature_extract.py<br>
@@ -33,5 +33,6 @@ if output is 1, it means that feaure is meaningful.
 <b> It is in progress, not completed </b> <br>
 there are some problems of optimaztion in layer more than 9.<br>
 Error rate<br>
-Two composer(Beethoven, Bach) : 20%(min) <br>
-Three composer( above two and chopin) : 38% (min)
+Two composers(Beethoven, Bach) : 19.83(min) <br>
+Three composers(above two and chopin) : 37.28% (min)
+Four composers (above three and Alkan) : 50.17%(min)
