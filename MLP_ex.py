@@ -5,28 +5,27 @@ import pandas as pd
 
 # ------parameter------- #
 input_dim = 15
-output_dim = 3
-hidden_dim = 80
-layer_num = 7
+output_dim = 2
+hidden_dim = 120
+layer_num = 4   # includes input layer
 
-num_neuron = [input_dim] + (layer_num-2)*[hidden_dim] + [output_dim]
 
-init = [0.1, 0.2]# [ init_weight_std, init_bias_std]
-training_factor = [500, 4763]#[ total_epoch , test_period ]
+init = [0.2, 0.4]# [ init_weight_std, init_bias_std]
+training_factor = [2, 2210]#[ total_epoch , test_period ]
 
-reg_lf = 1.05
-lfl = np.arange(0.4, 0, -0.01)
+lf_step = 0.03
+lfl = np.arange(0.01, 0.301, 0.001)
 # ---------------------- #
 
-
+num_neuron = [input_dim] + (layer_num-2)*[hidden_dim] + [output_dim]
 train_data = []
 test_data = []
 
-with open('train_data_3_thr0.9_normal', 'r') as trd:
+with open('train_data_round', 'r') as trd:
     for tr_data in trd:
         train_data.append(json.loads(tr_data))
 
-with open('test_data_3_thr0.9_normal', 'r') as tsd:
+with open('test_data_round', 'r') as tsd:
     for ts_data in tsd:
         test_data.append(json.loads(ts_data))
 
@@ -62,7 +61,7 @@ def softmax(y):
 
 
 def logistic(y):
-    return 1.0 / (1 + np.exp(-y))
+    return 1.0 / (1 + np.exp(-2*y+1))
 
 
 def back_prop(y_hat, weight, d_output):
@@ -71,7 +70,7 @@ def back_prop(y_hat, weight, d_output):
     for r in range(layer_num-2, -1, -1):
         e = y_hat[r]
         sm = (net_delta[0].T.dot(weight[r+1])).T
-        net_delta.insert(0, (e*(1-e)*sm))
+        net_delta.insert(0, 2*e*(1-e)*sm)
     return net_delta
 
 
@@ -84,18 +83,26 @@ def update(y_hat, weight, bias, net_delta, epoch):
     return [y_hat, weight, bias]
 
 
-def adjust_lf(y_hat, data_output, loss, reg):
-    loss_n = crossentropy(y_hat[-1], data_output)
-    if np.isnan(loss_n):
-        loss_n = np.nan_to_num(loss_n)
-        print 'nan loss', loss_n
-    if loss_n > loss:
-        if reg < len(lfl)-1:
-            reg += 1    # decrease learning factor
-    elif loss_n*reg_lf < loss:
-        if reg != 0:
-            reg -= 1    # increase learning factor
-    return [loss_n, reg]
+def adjust_lf(y_hat, data_output, cost, reg):
+    cost_n = crossentropy(y_hat[-1], data_output)
+    if cost == 0.0:
+        return [cost_n, reg]
+    if np.isnan(cost_n):
+        cost_n = np.nan_to_num(cost_n)
+        print 'nan loss', cost_n,'\n', y_hat, d_output
+    loss = cost_n/cost
+    step = int((loss - 1.0)/lf_step)
+    if step >= 1:
+        reg -= int(np.log2(step))    # decrease learning factor
+        if reg < 0:
+            reg = 0
+    elif step <= -1:
+        step = -step
+        reg += int(np.log2(step))    # increase learning factor
+        if reg > len(lfl)-1:
+            reg = len(lfl)-1
+
+    return [cost_n, reg]
 
 
 def crossentropy(y_hat, y):
@@ -108,10 +115,10 @@ def crossentropy(y_hat, y):
 
 
 [y_hat, weight, bias] = initialize_net()
-loss = 0.0
-reg = len(lfl)*1/3
+cost = 0.0
+reg = len(lfl)*2/3
 lft = lfl[reg]
-
+min_error = 1
 for epoch in range(training_factor[0]):
     random.shuffle(train_data)
     random.shuffle(test_data)
@@ -121,7 +128,7 @@ for epoch in range(training_factor[0]):
         y_hat = feed_forward(d_input, y_hat, weight, bias)
         net_delta = back_prop(y_hat, weight, d_output)
         [y_hat, weight, bias] = update(y_hat, weight, bias, net_delta, epoch)
-        [loss, reg] = adjust_lf(y_hat, d_output, loss, reg)
+        [cost, reg] = adjust_lf(y_hat, d_output, cost, reg)
         lft = lfl[reg]
         if pd.isnull(y_hat).any():
             print 'nan'
@@ -134,5 +141,10 @@ for epoch in range(training_factor[0]):
                 if np.argmax(x[-1]) != np.argmax(test_output):
                     test_error += 1
             test_error /= len(test_data)
+            if test_error <= min_error:
+                min_error = test_error
+                w = weight
+                b = bias
             print('epoch : ', epoch, 'test error : ', test_error)
             print lft
+print('min error rate: ', min_error)
